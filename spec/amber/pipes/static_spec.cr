@@ -57,6 +57,28 @@ module Amber
         response_true.body.should match(/index/)
         response_false.status_code.should eq 404
       end
+
+      it "sets default response headers" do
+        request = HTTP::Request.new("GET", "/index.html")
+        static = Static.new PUBLIC_PATH
+
+        response = create_request_and_return_io(static, request)
+
+        response.headers["Accept-Ranges"].should eq "bytes"
+        response.headers["X-Content-Type-Options"].should eq "nosniff"
+        response.headers["Cache-Control"].should eq "no-store"
+      end
+
+      it "lists the directory when directory_listing is enabled" do
+        request = HTTP::Request.new("GET", "/test")
+        static_true = Static.new PUBLIC_PATH, directory_listing: true
+
+        response_true = create_request_and_return_io(static_true, request)
+
+        response_true.headers["Location"].should eq "/test/"
+
+        response_true.status_code.should eq 302
+      end
     end
   end
 end
